@@ -447,17 +447,17 @@ DEFINE __expr62 := !next(__expr9) ;
 -- For each of the tracks T3A and T3B there is at least one test case
 -- in which the track is occupied at least once.
 
---1) The signal shows either green or red. |Ready|
+--1) The signal shows either green or red. |liveness|
 CTLSPEC EG(S1A_green|S1A_red) & EG(S2A_green|S2A_red) & EG(S3A_green|S3A_red) & EG(S4A_green|S4A_red) & EG(S1B_green|S1B_red) & EG(S2B_green|S2B_red) & EG(S3B_green|S3B_red) & EG(S4B_green|S4B_red)
 
---2) The signal shows red if passing the signal is unsafe due to occupied tracks or points that are not locked.
+--2) The signal shows red if passing the signal is unsafe due to occupied tracks or points that are not locked. |Safety|
 --CTLSPEC AG (EF T1A_occupied -> AF S1A_red) 
 
 
---3) The signal is not stuck on red forever. |Ready|
+--3) The signal is not stuck on red forever. |liveness|
 CTLSPEC !(AG S1A_red) & !(AG S2A_red) & !(AG S3A_red) & !(AG S4A_red) & !(AG S1B_red) & !(AG S2B_red) & !(AG S3B_red) & !(AG S4B_red)
 
---4) The system never issues conflicting commands. |Ready|
+--4) The system never issues conflicting commands. |liveness|
 CTLSPEC  AG!(S1A_red & S1A_green) & AG!(S2A_red & S2A_green) & AG!(S3A_red & S3A_green) &
 AG!(S4A_red & S4A_green) & AG!(S1B_red & S1B_green) & AG!(S2B_red & S2B_green) &
 AG!(S3B_red & S3B_green) & AG!(S4B_red & S4B_green) & AG!(P1A_goal_straight & P1A_goal_curved) &
@@ -466,31 +466,37 @@ AG!(P2B_goal_straight & P2B_goal_curved) & AG!(P1A_locked_straight & P1A_locked_
 AG!(P2A_locked_straight & P2A_locked_curved) &AG!(P1B_locked_straight & P1B_locked_curved) &
 AG!(P2B_locked_straight & P2B_locked_curved)
 
---5) The points always follow the given commands. |Ready|
+--5) The points always follow the given commands. |liveness|
 CTLSPEC AG (P1A_goal_curved -> AF P1A_locked_curved) & AG (P2A_goal_curved -> AF P2A_locked_curved) &
 AG (P1B_goal_curved -> AF P1B_locked_curved) & AG (P2B_goal_curved -> AF P2B_locked_curved) &
 AG (P1A_goal_straight -> AF P1A_locked_straight) & AG (P2A_goal_straight -> AF P2A_locked_straight) & 
 AG (P1B_goal_straight -> AF P1B_locked_straight) & AG (P2B_goal_straight -> AF P2B_locked_straight)
 
---6)Trains always make progress. |Ready| need to add signes
-CTLSPEC AG (T1A_occupied -> AF (T2A_occupied | T3B_occupied)) & AG (T2A_occupied -> AF T3A_occupied) &
-AG (T3A_occupied -> AF T4A_occupied) & AG (T1B_occupied -> AF (T2B_occupied | T3A_occupied)) & AG (T2B_occupied -> AF T3B_occupied) &
-AG (T3B_occupied -> AF T4B_occupied) & AG (T3B_occupied -> AF T2B_occupied) & AG (T2B_occupied -> AF T1B_occupied) &
-AG (T3A_occupied -> AF T2A_occupied) & AG (T2A_occupied -> AF T1A_occupied)
+--6)Trains always make progress. |liveness| 
+CTLSPEC !(AG T1A_occupied) & !(AG T2A_occupied) & !(AG T3A_occupied) & !(AG T4A_occupied) & !(AG T1B_occupied) &
+ !(AG T2B_occupied) & !(AG T3B_occupied) & !(AG T4B_occupied)
 
---7)There is a trace in which track T3A is occupied. |Ready|
+
+--7)There is a trace in which track T3A is occupied. |liveness|
 CTLSPEC EF T3A_occupied
 
---8)There is a trace in which trains pass each other in the middle.
+--8)There is a trace in which trains pass each other in the middle. |liveness|
 CTLSPEC EF (T3A_occupied & T3B_occupied)
 
---9)Сorresponding points must always be adjacent to each other.
-CTLSPEC  AG (P1A_locked_curved -> AX P2B_locked_curved) & AG (P2A_locked_curved -> AX P1B_locked_curved) &
-AG (P2B_locked_curved -> AX P1A_locked_curved) & AG (P1B_locked_curved -> AX P2A_locked_curved) 
+--9)Сorresponding points must always be adjacent to each other. |Safety|
+CTLSPEC  AG (P1A_locked_curved -> AF P2B_locked_curved) & AG (P2A_locked_curved -> AF P1B_locked_curved) &
+AG (P2B_locked_curved -> AF P1A_locked_curved) & AG (P1B_locked_curved -> AF P2A_locked_curved) 
 
---10)Corresponding points must remain in curved positions if a train passes through them.
-CTLSPEC  AG (P1A_locked_curved -> AX P2B_locked_curved) 
 
+--10)Points must remain in curved positions for a train to pass through them if the train approaches. |Safety|
+--CTLSPEC  AG (S2A_green -> AF (P1A_locked_curved & P2B_locked_curved)) &
+--AG (S4A_green -> AF (P2A_locked_curved & P1B_locked_curved))
+
+--11)Corresponding points must remain in curved positions if a train passes through them. |Safety|
+CTLSPEC  AG ((P1A_locked_curved & P2B_locked_curved) -> AF S2A_green)
+--A[(P1B_locked_curved & P2A_locked_curved) U (T1B_occupied | T3A_occupied)] 
+
+so at the same time we have p1 and p2 not locked but train signe shows that we can go 
 
 
 --Tid_occupied Track id is occupied.
