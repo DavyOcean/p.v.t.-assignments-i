@@ -1,0 +1,37 @@
+; Starting Z3
+(echo "Starting Z3 for multiplyBy3 verification...")
+
+; Declaration of variables
+(declare-const y Int)
+(declare-const res Int)
+(declare-const i Int)
+
+; Initialization of variables
+; x is always 3 in multiplyBy3 function
+(assert (= res 0))
+(assert (= i 3))
+
+; Loop Iterations
+; Since x is 3, the loop runs 3 times. We unroll the loop manually.
+
+; First iteration
+(assert (= res y)) ; res = res + y, which is initially 0 + y
+(assert (= i 2))   ; i = i - 1
+
+; Second iteration
+(assert (= res (+ res y)))
+(assert (= i 1))
+
+; Third iteration
+(assert (= res (+ res y)))
+(assert (= i 0))
+
+; Final Assertion
+; The assertion res == 3 * y
+(assert (= res (* 3 y)))
+
+; Check for satisfiability
+(check-sat)
+
+; If satisfiable, get the model
+(get-model)
